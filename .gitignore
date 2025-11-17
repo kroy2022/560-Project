@@ -483,4 +483,4 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 # Local-only configuration
-Team11API/appsettings.Development.json
+backend/Team11API/appsettings.Development.json
