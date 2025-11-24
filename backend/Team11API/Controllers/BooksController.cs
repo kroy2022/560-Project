@@ -5,7 +5,7 @@ using Team11API.Services;
 namespace Team11API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("books/")]
 public class BooksController : ControllerBase
 {
     private readonly Database _db;

@@ -21,12 +21,16 @@ namespace Team11API.Models
             _db = db;
         }
 
+    
         public async Task<AuthDto> ValidateSignIn(SignInBody body)
         {
-            string sql = "SELECT COUNT(*) FROM Users WHERE UserID = @UserID AND Password = @Password";
+            Console.WriteLine($"EMAIL: {body.Email} AND password: {body.Password}");
+            string sql = "SELECT UserID, FirstName, LastName FROM Users WHERE Email = @Email AND Password = @Password";
             AuthDto authDto = new AuthDto
             {
-                UserID = body.UserID,
+                UserID = null,
+                FirstName = null,
+                LastName = null,
                 IsValid = false
             };
 
@@ -36,12 +40,19 @@ namespace Team11API.Models
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@UserID", body.UserID);
-                    cmd.Parameters.AddWithValue("@Password", body.Password);
+                    cmd.Parameters.AddWithValue("@Email", body.Email);
+                    cmd.Parameters.AddWithValue("@Password", body.Password); 
 
-                    int userCount = (int)await cmd.ExecuteScalarAsync();
-                    Console.WriteLine($"USER COUNT: {userCount}");
-                    authDto.IsValid = userCount > 0;
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            authDto.UserID = reader.GetInt32(0);
+                            authDto.FirstName = reader.GetString(1);
+                            authDto.LastName = reader.GetString(2);
+                            authDto.IsValid = true;
+                        }
+                    }
                 }
             }
 
@@ -50,10 +61,14 @@ namespace Team11API.Models
 
         public async Task<AuthDto> CreateUser(SignUpBody body)
         {
-            string sql = "INSERT INTO Users (UserID, FirstName, LastName, Password) VALUES (@UserID, @FirstName, @LastName, @Password)";
+            string sql = @"
+                INSERT INTO Users (Email, FirstName, LastName, Password) 
+                VALUES (@Email, @FirstName, @LastName, @Password);
+                SELECT CAST(SCOPE_IDENTITY() AS int);
+            ";
             AuthDto authDto = new AuthDto
             {
-                UserID = body.UserID,
+                UserID = null,
                 IsValid = false
             };
 
@@ -61,16 +76,18 @@ namespace Team11API.Models
             {
                 await conn.OpenAsync();
 
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                using (var cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@UserID", body.UserID);
+                    cmd.Parameters.AddWithValue("@Email", body.Email);
                     cmd.Parameters.AddWithValue("@FirstName", body.FirstName);
                     cmd.Parameters.AddWithValue("@LastName", body.LastName);
                     cmd.Parameters.AddWithValue("@Password", body.Password);
 
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    object result = await cmd.ExecuteScalarAsync();
+                    int newUserId = Convert.ToInt32(result);
 
-                   authDto.IsValid = rowsAffected > 0;
+                    authDto.UserID = newUserId;
+                    authDto.IsValid = true;
                 }
             }
 
