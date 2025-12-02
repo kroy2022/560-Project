@@ -38,3 +38,8 @@ export interface GenreRow {
   genreId: number
   books: BookSummary[]
 }
+
+export interface ApiResponse {
+  status: string
+  data: {}
+}

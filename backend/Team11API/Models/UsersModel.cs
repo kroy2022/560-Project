@@ -11,10 +11,7 @@ namespace Team11API.Models
     {
         private Database _db;
 
-        public UsersModel()
-        {
-
-        }
+        public UsersModel() {}
 
         public void SetDatabaseValue(Database db) 
         {

@@ -1,10 +1,11 @@
 import { BookRow } from "./BookRow"
 import type { GenreRow as GenreRowType } from "../types"
 
-interface GenreRowProps {
+interface GenreRowComponentProps {
   genreRow: GenreRowType
+  getGenreBooksWithOffset: (genre_id: number, offset: number) => void
 }
 
-export function GenreRow({ genreRow }: GenreRowProps) {
-  return <BookRow title={genreRow.genre} books={genreRow.books} />
+export function GenreRowComponent({ genreRow, getGenreBooksWithOffset }: GenreRowComponentProps) {
+  return <BookRow title={genreRow.genre} books={genreRow.books}/>
 }

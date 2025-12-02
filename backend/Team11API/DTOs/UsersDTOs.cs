@@ -24,4 +24,6 @@
         public string? LastName { get; set; }
         public bool IsValid { get; set; }
     }
+
+    
 }
