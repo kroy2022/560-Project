@@ -30,7 +30,7 @@ export function Dashboard() {
       const response = await axios.get(`${API_URL}/dashboard/top-reviewed`);
       setTopReviewedBooks(response.data.popularBooks);
     } catch (error) {
-      console.error("ERROR IN : ", error);
+      console.error("ERROR IN :getTopReviewedBooks ", error);
     }    
   }
 
@@ -41,7 +41,7 @@ export function Dashboard() {
       })
       setSavedBooks(response.data.books);
     } catch (error) {
-      console.error("ERROR IN : ", error);
+      console.error("ERROR IN getSavedBooks: ", error);
     }
   }
 
@@ -50,7 +50,7 @@ export function Dashboard() {
       const response = await axios.get(`${API_URL}/dashboard/genre-books`);
       setGenreRows(response.data.genreRows);
     } catch (error) {
-      console.error("ERROR IN : ", error);
+      console.error("ERROR IN getGenreRows: ", error);
     }
   }
 

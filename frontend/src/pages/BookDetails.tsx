@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Star, Calendar, Tag, ArrowLeft } from "lucide-react"
 import { Button } from "../components/ui/button"
@@ -7,12 +8,115 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { BookCard } from "../components/BookCard"
 import { bookDetails, bookReviews, topReviewedBooks } from "../data/mockData"
+import axios from "axios"
+import { API_URL } from "../api/routes"
+import { Label } from "../components/ui/label"
 
 export function BookDetails() {
+  const user_id = 'kevinro.y'
   const { bookId } = useParams<{ bookId: string }>()
   const book = bookDetails[Number(bookId)]
   const reviews = bookReviews[Number(bookId)] || []
   const similarBooks = topReviewedBooks.slice(0, 6)
+  
+  const [reviewRating, setReviewRating] = useState(0)
+  const [hoveredRating, setHoveredRating] = useState(0)
+  const [reviewContent, setReviewContent] = useState("")
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+
+  // get book info first, then reviews, then similar books
+  useEffect(() => {
+    const getBookData = async () => {
+      await getBookInfo();
+      await getBookReviews();
+      await getSimilarBooks();
+    }
+
+    getBookData();
+  }, [])
+
+  const getBookInfo = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/book/info?bookId=${bookId}`);
+    //  setBook(response.data.book);
+    } catch (error) {
+      console.error("Error in getBookInfo: ", error);
+    }
+  }
+
+  const getBookReviews = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/book/similar-books?genre=${book.bookId}&author=${book.author}`);
+    //  setBookReviews(response.data.bookReviews);
+    } catch (error) {
+      console.error("Error in getSimilarBooks: ", error);
+    }
+  }
+
+  // get 10 random books => 5 same author, 5 same genre
+  const getSimilarBooks = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/book/similar-books?genre=${book.bookId}&author=${book.author}`);
+    //  setSimilarBooks(response.data.similarBooks);
+    } catch (error) {
+      console.error("Error in getSimilarBooks: ", error);
+    }
+  }
+
+  // Below functions are for updates / inserts into DB
+
+  const changeSavedStatus = async () => {
+    // try {
+    //   const response = await axios.post(`${API_URL}/book/save`, {
+    //       userId: user_id,
+    //       bookId: book.bookId,
+    //       isCurrentlySaved: book.isCurrentlySaved
+    //   })
+    // } catch (error) {
+    //   console.error("ERROR IN changeSavedStatus: ", error);
+    // }
+  }
+
+  const addReviewToBook = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (reviewRating === 0) {
+      alert("Please select a rating")
+      return
+    }
+    
+    if (reviewContent.trim().length < 10) {
+      alert("Please write a review with at least 10 characters")
+      return
+    }
+    
+    setIsSubmittingReview(true)
+    
+    try {
+      const response = await axios.post(`${API_URL}/book/review/create`, {
+        bookId: bookId,
+        userId: user_id,
+        rating: reviewRating,
+        content: reviewContent
+      })
+      
+      console.log("Review submitted:", response.data)
+      
+      // Reset form
+      setReviewRating(0)
+      setReviewContent("")
+      
+      // Increase review array
+      
+      
+      alert("Review submitted successfully!")
+    } catch (error) {
+      console.error("Error submitting review:", error)
+      alert("Failed to submit review. Please try again.")
+    } finally {
+      setIsSubmittingReview(false)
+    }
+  }
 
   if (!book) {
     return (
@@ -110,38 +214,111 @@ export function BookDetails() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="reviews" className="space-y-4">
-                {reviews.length === 0 ? (
-                  <p className="text-zinc-400 text-center py-8">No reviews yet. Be the first to review this book!</p>
-                ) : (
-                  reviews.map((review) => (
-                    <Card key={review.reviewId}>
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-lg">{review.userName}</CardTitle>
-                            <p className="text-sm text-zinc-500 mt-1">
-                              {new Date(review.reviewDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
+              <TabsContent value="reviews" className="space-y-6">
+                {/* Write a Review Form */}
+                <Card className="bg-zinc-900/50 border-zinc-800">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Write a Review</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={addReviewToBook} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="rating" className="text-zinc-200">
+                          Your Rating
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setReviewRating(i + 1)}
+                              onMouseEnter={() => setHoveredRating(i + 1)}
+                              onMouseLeave={() => setHoveredRating(0)}
+                              className="transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-600 rounded"
+                            >
                               <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < review.rating ? "fill-yellow-500 text-yellow-500" : "text-zinc-700"
+                                className={`h-8 w-8 ${
+                                  i < (hoveredRating || reviewRating)
+                                    ? "fill-yellow-500 text-yellow-500"
+                                    : "text-zinc-700"
                                 }`}
                               />
-                            ))}
-                          </div>
+                            </button>
+                          ))}
+                          {reviewRating > 0 && (
+                            <span className="text-zinc-400 ml-2">{reviewRating} / 5</span>
+                          )}
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-zinc-300 leading-relaxed">{review.content}</p>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="review" className="text-zinc-200">
+                          Your Review
+                        </Label>
+                        <textarea
+                          id="review"
+                          placeholder="Share your thoughts about this book..."
+                          value={reviewContent}
+                          onChange={(e) => setReviewContent(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md text-zinc-50 placeholder:text-zinc-500 focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none resize-none"
+                          required
+                        />
+                        <p className="text-xs text-zinc-500">
+                          {reviewContent.length} characters (minimum 10)
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-red-600 hover:bg-red-700"
+                        disabled={isSubmittingReview}
+                      >
+                        {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                {/* Reviews List with Scrollable Container */}
+                <div>
+                  <h3 className="text-lg font-semibold text-zinc-50 mb-3">
+                    All Reviews ({reviews.length})
+                  </h3>
+                  <div className="max-h-[400px] sm:max-h-[500px] md:max-h-[600px] lg:max-h-[700px] overflow-y-auto space-y-4 pr-2">
+                    {reviews.length === 0 ? (
+                      <p className="text-zinc-400 text-center py-8">No reviews yet. Be the first to review this book!</p>
+                    ) : (
+                      reviews.map((review) => (
+                        <Card key={review.reviewId} className="bg-zinc-900/50 border-zinc-800">
+                          <CardHeader>
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <CardTitle className="text-lg">{review.userName}</CardTitle>
+                                <p className="text-sm text-zinc-500 mt-1">
+                                  {new Date(review.reviewDate).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 ${
+                                      i < review.rating ? "fill-yellow-500 text-yellow-500" : "text-zinc-700"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-zinc-300 leading-relaxed">{review.content}</p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

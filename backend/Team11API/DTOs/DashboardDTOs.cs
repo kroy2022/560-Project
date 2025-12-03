@@ -1,10 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Team11API.DTOs
 {
     // Sent DTO's (from UI to backend)
     public class SavedBooksBody
     {
-        public string UserID { get; set; }
+        [Required]
+        public int UserID { get; set; }
     }
+    
     // Helper classes
     public class PopularBook : Book
     {
@@ -14,6 +18,18 @@ namespace Team11API.DTOs
     }
     public class Book
     {
+        public Book()
+        {
+            bookId = 0;
+            isbn = "";
+            title = "";
+            description = "";
+            author = "";
+            coverImage = "";
+            genre = "";
+            publicationDate = DateTime.Today;
+        }
+
         public int bookId { get; set; }
         public string isbn { get; set; }
         public string title { get; set; }

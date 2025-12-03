@@ -43,7 +43,7 @@ namespace Team11API.Models
 
         public async Task<RowBooksDto> GetSavedBooks(SavedBooksBody body)
         {
-            string sql = "SELECT b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, a.FirstName + ' ' + a.LastName AS author, g.Name AS genre From Books b JOIN SavedBooks sb ON b.BookID = sb.BookID AND sb.userID = @UserID JOIN Authors a ON b.AuthorID = a.AuthorID JOIN Genres g ON b.GenreID = g.GenreID;";
+            string sql = "SELECT b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, b.CoverImage, a.FirstName + ' ' + a.LastName AS Author, g.Name AS genre From Books b JOIN SavedBooks sb ON b.BookID = sb.BookID AND sb.userID = @UserID JOIN Authors a ON b.AuthorID = a.AuthorID JOIN Genres g ON b.GenreID = g.GenreID;";
             RowBooksDto savedBooksDto = new RowBooksDto { books = new List<Book>() };
             using (var conn = _db.GetConnection())
             {
@@ -79,7 +79,7 @@ namespace Team11API.Models
 
         public async Task<GenreRowsDto> GetGenreRows()
         {
-            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 10 b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, a.FirstName + ' ' + a.LastName AS author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
+            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 10 b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, a.FirstName + ' ' + a.LastName AS Author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
             GenreRowsDto genreRowsDto = new GenreRowsDto { genreRows = new List<GenreRow>() };
             using (var conn = _db.GetConnection())
             {
@@ -113,7 +113,7 @@ namespace Team11API.Models
 
         public async Task<RowBooksDto> GetGenreBooksWithOffet(int genreId, int offset)
         {
-            string sql = "SELECT b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, a.FirstName + ' ' + a.LastName AS author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = @GenreID ORDER BY b.BookID OFFSET @Offset ROWS FETCH NEXT 10 ROWS ONLY FOR JSON PATH";
+            string sql = "SELECT b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, b.CoverImage, a.FirstName + ' ' + a.LastName AS Author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = @GenreID ORDER BY b.BookID OFFSET @Offset ROWS FETCH NEXT 10 ROWS ONLY FOR JSON PATH";
             RowBooksDto genreBooks = new RowBooksDto
             {
                 books = new List<Book>()

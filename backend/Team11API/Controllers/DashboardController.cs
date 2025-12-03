@@ -8,55 +8,23 @@ namespace Team11API.Controllers;
 
 [ApiController]
 [Route("dashboard")]
-public class BooksController : ControllerBase
+public class DashboardController : ControllerBase
 {
     private readonly Database _db;
     private readonly DashboardModel _dashboardModel = new DashboardModel();
 
-    public BooksController(Database db)
+    public DashboardController(Database db)
     {
         _db = db;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetUsers()
-    {
-        var users = new List<object>();
-
-        using (var conn = _db.GetConnection())
-        {
-            await conn.OpenAsync();
-
-            var cmd = new SqlCommand("SELECT TOP 20 * FROM Users", conn);
-            var reader = await cmd.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
-            {
-                users.Add(new
-                {
-                    Id = reader["Id"],
-                    Name = reader["Name"],
-                    Email = reader["Email"]
-                });
-            }
-        }
-
-        return Ok(users);
-    }
+    // GET REQUESTS
 
     [HttpGet("top-reviewed")]
     public async Task<IActionResult> TopReviewedBooksRoute()
     {
         PopularBooksDto result = await _dashboardModel.GetPopularBooks();
         Console.WriteLine($"TOP REVIEWED BOOKS RESULT: {result}");
-        return Ok(result);
-    }
-
-    [HttpPost("saved")]
-    public async Task<IActionResult> SavedBooksRoute([FromBody] SavedBooksBody body)
-    {
-        RowBooksDto result = await _dashboardModel.GetSavedBooks(body);
-        Console.WriteLine($"GET SAVED BOOKS RESULT: {result}");
         return Ok(result);
     }
 
@@ -79,4 +47,20 @@ public class BooksController : ControllerBase
         Console.WriteLine($"GENRE BOOKS WITH OFFSET RESULT: {result}");
         return Ok(result); 
     }
+
+    // POST REQUESTS
+
+    [HttpPost("saved")]
+    public async Task<IActionResult> SavedBooksRoute([FromBody] SavedBooksBody body)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
+        RowBooksDto result = await _dashboardModel.GetSavedBooks(body);
+        Console.WriteLine($"GET SAVED BOOKS RESULT: {result}");
+        return Ok(result);
+    }
+
 }
