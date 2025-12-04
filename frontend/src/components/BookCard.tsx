@@ -7,10 +7,15 @@ interface BookCardProps {
 }
 
 function isPopularBook(book: BookSummary | PopularBook): book is PopularBook {
-  return "avgRating" in book
+  if ("avgRating" in book) {
+    return book.avgRating != null;
+  }
+
+  return false;
 }
 
 export function BookCard({ book }: BookCardProps) {
+  console.log(book);
   return (
     <Link to={`/book/${book.bookId}`}>
       <div className="group relative flex-shrink-0 w-[180px] cursor-pointer transition-transform duration-300 hover:scale-105">

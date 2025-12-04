@@ -1,9 +1,11 @@
 import { BookCard } from "../components/BookCard"
-import { savedBooks } from "../data/mockData"
+import { Navbar } from "../components/Navbar"
+import { AuthValues } from "../types"
 
-export function SavedBooks() {
+export function SavedBooks({ user_id, user_name }: AuthValues) {
   return (
     <div className="min-h-screen bg-zinc-950 py-8 px-4 md:px-8">
+      <Navbar showSearchBar={false} />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-zinc-50 mb-8">My Saved Books</h1>
         {savedBooks.length === 0 ? (

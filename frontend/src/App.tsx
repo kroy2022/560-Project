@@ -5,20 +5,46 @@ import { SignUp } from "./pages/SignUp"
 import { Dashboard } from "./pages/Dashboard"
 import { SavedBooks } from "./pages/SavedBooks"
 import { BookDetails } from "./pages/BookDetails"
+import { Authors } from "./pages/Authors"
+import AuthGuard from "./pages/AuthGuard"
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-zinc-950">
-        <Navbar />
         <Routes>
-          <Route path="/" element={<SignIn />} />
-          <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/saved" element={<SavedBooks />} />
-          <Route path="/book/:bookId" element={<BookDetails />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/" element={
+              <AuthGuard>
+                <Dashboard />
+              </AuthGuard>
+            } />
+          <Route path="/dashboard" element={
+              <AuthGuard>
+                <Dashboard />
+              </AuthGuard>
+            } />
+          <Route path="/saved" element={
+              <AuthGuard>
+                <SavedBooks />
+              </AuthGuard>
+            } />
+          <Route path="/book/:bookId" element={
+              <AuthGuard>
+                <BookDetails />
+              </AuthGuard>
+            } />
+          <Route path="/authors" element={
+              <AuthGuard>
+                <Authors />
+              </AuthGuard>
+            } />
+          <Route path="/author/:authorId" element={
+              <AuthGuard>
+                <Authors />
+              </AuthGuard>
+            } />  
         </Routes>
-      </div>
     </BrowserRouter>
   )
 }

@@ -40,6 +40,7 @@ namespace Team11API.DTOs
 
         public DateTime publicationDate { get; set; }
         public int? isSaved { get; set; }
+        public double? avgRating { get; set; }
     }
 
     public class GenreRow
@@ -52,6 +53,11 @@ namespace Team11API.DTOs
     }
 
     // Return DTO's (from backend to UI)
+    public class FeaturedBookDto
+    {
+        public Book featuredBook { get; set; }
+    }
+
     public class PopularBooksDto
     {
         public List<PopularBook> popularBooks { get; set; }
@@ -65,5 +71,10 @@ namespace Team11API.DTOs
     public class GenreRowsDto
     {
         public List<GenreRow> genreRows { get; set; }
+    }
+
+    public class SearchResultsDto
+    {
+        public List<Book> searchResults { get; set;}
     }
 }

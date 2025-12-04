@@ -21,6 +21,14 @@ public class DashboardController : ControllerBase
 
     // GET REQUESTS
 
+    [HttpGet("featured")]
+    public async Task<IActionResult> FeaturedBookRoute()
+    {
+        Console.WriteLine("IN FEATURED BOOK");
+        FeaturedBookDto result = await _dashboardModel.GetFeaturedBook();
+        return Ok(result);
+    }
+
     [HttpGet("top-reviewed")]
     public async Task<IActionResult> TopReviewedBooksRoute()
     {
@@ -49,6 +57,21 @@ public class DashboardController : ControllerBase
         Console.WriteLine($"GENRE BOOKS WITH OFFSET RESULT: {result}");
         return Ok(result); 
     }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> GetSearchResultsRoute([FromQuery] string? query)
+    {
+        string searchQuery = query ?? "";
+        Console.WriteLine($"SEARCH QUERY: {searchQuery}");
+
+        if (string.IsNullOrEmpty(searchQuery))
+        {
+            return BadRequest("Empty search query");
+        }
+
+        SearchResultsDto result = await _dashboardModel.GetSearchResults(searchQuery);
+        return Ok(result); 
+    }   
 
     // POST REQUESTS
 

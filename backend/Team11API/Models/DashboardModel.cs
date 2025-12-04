@@ -17,6 +17,66 @@ namespace Team11API.Models
             _db = db;
         }
 
+        public async Task<FeaturedBookDto> GetFeaturedBook()
+        {
+            string sql = @"SELECT TOP 1
+                b.BookID, 
+                b.ISBN, 
+                b.Title, 
+                b.Description,
+                b.PublicationDate, 
+                b.CoverImage, 
+                a.FirstName + ' ' + a.LastName AS Author, 
+                g.Name AS Genre, 
+                avg_ratings.AvgRating 
+            FROM Books b
+            JOIN Authors a ON b.AuthorID = a.AuthorID
+            JOIN Genres g ON b.GenreID = g.GenreID
+            LEFT JOIN (
+                SELECT BookID, AVG(Rating) AS AvgRating
+                FROM Reviews
+                GROUP BY BookID
+            ) avg_ratings ON b.BookID = avg_ratings.BookID
+            ORDER BY avg_ratings.AvgRating DESC;";
+
+            FeaturedBookDto fbd = new FeaturedBookDto
+            {
+                featuredBook = new Book()
+            };
+
+            using (var conn = _db.GetConnection())
+            {
+                await conn.OpenAsync();
+                
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var book = new Book
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                isbn = reader.GetString(reader.GetOrdinal("ISBN")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                description = reader.GetString(reader.GetOrdinal("Description")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                                genre = reader.GetString(reader.GetOrdinal("Genre")),
+                                avgRating = reader.IsDBNull(reader.GetOrdinal("AvgRating"))
+                                    ? (double?)null
+                                    : Convert.ToDouble(reader["AvgRating"])
+                            };
+
+                            fbd.featuredBook = book;
+                        }
+                    }
+                }
+            }
+
+            return fbd;
+        }
+
         public async Task<PopularBooksDto> GetPopularBooks()
         {
             string sql = "";
@@ -153,6 +213,60 @@ namespace Team11API.Models
             }
 
             return genreBooks;
+        }
+
+        public async Task<SearchResultsDto> GetSearchResults(string searchQuery)
+        {
+            string sql = @"SELECT 
+                b.BookID, 
+                b.ISBN, 
+                b.Title, 
+                b.Description, 
+                b.PublicationDate, 
+                b.CoverImage, 
+                g.Name AS genre, 
+                a.FirstName + ' ' + a.LastName AS Author
+            FROM Books b
+            JOIN Authors a ON b.AuthorID = a.AuthorID
+            JOIN Genres g ON b.GenreID = g.GenreID
+            WHERE b.Title LIKE '%' + @SearchQuery + '%'
+            ORDER BY b.BookID;
+            ";
+            SearchResultsDto srd = new SearchResultsDto
+            {
+                searchResults = new List<Book>()
+            };
+
+            using (var conn = _db.GetConnection())
+            {
+                await conn.OpenAsync();
+                
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@SearchQuery", searchQuery);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var book = new Book
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                isbn = reader.GetString(reader.GetOrdinal("ISBN")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                description = reader.GetString(reader.GetOrdinal("Description")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                                genre = reader.GetString(reader.GetOrdinal("Genre"))
+                            };
+
+                            srd.searchResults.Add(book);
+                        }
+                    }
+                }
+            }
+
+            return srd;
         }
     }
 }

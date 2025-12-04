@@ -125,7 +125,7 @@ export const genreRows: GenreRow[] = [
   {
     genre: "Fiction",
     genreId: 1,
-    books: [
+    genreBooks: [
       ...topReviewedBooks.filter((book) => book.genre === "Fiction"),
       {
         bookId: 11,
@@ -164,7 +164,7 @@ export const genreRows: GenreRow[] = [
   {
     genre: "Mystery",
     genreId: 2,
-    books: [
+    genreBooks: [
       ...topReviewedBooks.filter((book) => book.genre === "Mystery"),
       {
         bookId: 15,
@@ -211,7 +211,7 @@ export const genreRows: GenreRow[] = [
   {
     genre: "Fantasy",
     genreId: 3,
-    books: [
+    genreBooks: [
       ...topReviewedBooks.filter((book) => book.genre === "Fantasy"),
       {
         bookId: 20,

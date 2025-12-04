@@ -2,20 +2,24 @@ import { useState, useEffect } from "react"
 import { HeroBanner } from "../components/HeroBanner"
 import { BookRow } from "../components/BookRow"
 import { GenreRowComponent } from "../components/GenreRow"
-import { featuredBook, topReviewedBooks, savedBooks, genreRows } from "../data/mockData"
 import axios from "axios"
 import { API_URL } from "../api/routes"
-import type { PopularBook, BookSummary, Book, Review, GenreRow, ApiResponse } from "../types"
+import type { PopularBook, BookSummary, Book, Review, GenreRow, ApiResponse, AuthValues } from "../types"
+import { Navbar } from "../components/Navbar"
 
-export function Dashboard() {
-  const user_id = 7;
+export function Dashboard({ user_id, user_name }: AuthValues) {
+  console.log("USER ID AND NAME: ", user_id, name);
   const [topReviewedBooks, setTopReviewedBooks] = useState<PopularBook[]>([]);
   const [savedBooks, setSavedBooks] = useState<BookSummary[]>([]);
   const [genreRows, setGenreRows] = useState<GenreRow[]>([]);
+  const [featuredBook, setFeaturedBook] = useState<Book | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<BookSummary[]>([]);
 
   useEffect(() => {
     const getDashboardData = async () => {
       await Promise.all([
+        getFeaturedBook(),
        // getTopReviewedBooks(),
         getSavedBooks(),
         getGenreRows()
@@ -25,12 +29,22 @@ export function Dashboard() {
     getDashboardData();
   }, [])
 
+  const getFeaturedBook = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/dashboard/featured`);
+      console.log("FEATURED RESPONSE: ", response);
+      setFeaturedBook(response.data.featuredBook);
+    } catch (error) {
+      console.error("ERROR IN getFeaturedBook ", error);
+    }    
+  }
+
   const getTopReviewedBooks = async () => {
     try {
       const response = await axios.get(`${API_URL}/dashboard/top-reviewed`);
       setTopReviewedBooks(response.data.popularBooks);
     } catch (error) {
-      console.error("ERROR IN :getTopReviewedBooks ", error);
+      console.error("ERROR IN getTopReviewedBooks ", error);
     }    
   }
 
@@ -80,16 +94,47 @@ export function Dashboard() {
     }
   }
 
+  const getSearchResults = async (query: string) => {
+    setSearchQuery(query);
+
+    if (query != "") {
+      try {
+        const response = await axios.get(`${API_URL}/dashboard/search?query=${query}`);
+        console.log("SEARCH RESULTS RESPONSE: ", response);
+        setSearchResults(response.data.searchResults);
+
+        if (response.status != 200) {;
+          alert("Error getting search results");
+          setSearchQuery('');
+          return;
+        }
+        
+      } catch (error) {
+        console.error("ERROR GETTING SEARCH RESULTS: ", error);
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950">
-      <HeroBanner book={featuredBook} />
-      <div className="space-y-8 py-8">
-        <BookRow title="Top Reviewed Books" books={topReviewedBooks} />
-        <BookRow title="My Saved Books" books={savedBooks} />
-        {genreRows.map((genreRow) => (
-          <GenreRowComponent key={genreRow.genreId} genreRow={genreRow} getGenreBooksWithOffset={getGenreBooksWithOffset} />
-        ))} 
-      </div>
+      <Navbar showSearchBar={true} getSearchResults={getSearchResults}/>
+      
+      {searchQuery == "" ? (
+        <>
+          <HeroBanner book={featuredBook} />
+          <div className="space-y-8 py-8">
+            <BookRow title="Top Reviewed Books" books={topReviewedBooks} />
+            <BookRow title={`${user_name}'s Saved Books`} books={savedBooks} />
+            {genreRows.map((genreRow) => (
+              <GenreRowComponent key={genreRow.genreId} genreRow={genreRow} getGenreBooksWithOffset={getGenreBooksWithOffset} />
+            ))} 
+          </div>
+        </>
+      ) : (
+        <div className="space-y-8 py-8">
+          <BookRow title="Search Results" books={searchResults} />
+        </div>
+      )}
     </div>
   )
 }

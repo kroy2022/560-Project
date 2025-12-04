@@ -1,3 +1,24 @@
+export interface Author {
+  authorId: number
+  name: string
+  genres: string[]
+  totalBooks: number
+  coverImage?: string
+  avgRating?: number
+  description?: string
+}
+
+export interface AuthorSummary {
+  authorId: number
+  name: string
+  coverImage: string
+}
+
+export interface AuthValues {
+  user_id?: number
+  user_name?: string
+}
+
 export interface Book {
   bookId: number
   isbn: string
@@ -8,6 +29,7 @@ export interface Book {
   description: string
   genre: string
   isSaved?: number
+  avgRating?: number
 }
 
 export interface BookSummary {
@@ -27,8 +49,8 @@ export interface PopularBook extends BookSummary {
 
 export interface Review {
   reviewId: number
-  userId: number
-  userName: string
+  userId?: number
+  userName?: string
   rating: number
   content: string
   reviewDate: string
