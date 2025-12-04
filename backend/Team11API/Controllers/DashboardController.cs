@@ -16,6 +16,7 @@ public class DashboardController : ControllerBase
     public DashboardController(Database db)
     {
         _db = db;
+        _dashboardModel.SetDatabaseValue(_db);
     }
 
     // GET REQUESTS
@@ -23,6 +24,7 @@ public class DashboardController : ControllerBase
     [HttpGet("top-reviewed")]
     public async Task<IActionResult> TopReviewedBooksRoute()
     {
+        Console.WriteLine("IN TOP REVIEWED");
         PopularBooksDto result = await _dashboardModel.GetPopularBooks();
         Console.WriteLine($"TOP REVIEWED BOOKS RESULT: {result}");
         return Ok(result);
@@ -58,6 +60,7 @@ public class DashboardController : ControllerBase
             return BadRequest(ModelState);
         }
         
+        Console.WriteLine($"IN SAVED BOOKS ROITE: {body.UserID}");
         RowBooksDto result = await _dashboardModel.GetSavedBooks(body);
         Console.WriteLine($"GET SAVED BOOKS RESULT: {result}");
         return Ok(result);

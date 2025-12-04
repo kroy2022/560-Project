@@ -10,7 +10,7 @@ namespace Team11API.DTOs
         [Required]
         public int userId { get; set; } 
         [Required]
-        public bool isCurrentlySaved { get; set; }
+        public int isCurrentlySaved { get; set; }
     }
 
     public class WriteReviewBody

@@ -7,6 +7,7 @@ export interface Book {
   publicationDate: string
   description: string
   genre: string
+  isSaved?: number
 }
 
 export interface BookSummary {
@@ -36,7 +37,7 @@ export interface Review {
 export interface GenreRow {
   genre: string
   genreId: number
-  books: BookSummary[]
+  genreBooks: BookSummary[]
 }
 
 export interface ApiResponse {

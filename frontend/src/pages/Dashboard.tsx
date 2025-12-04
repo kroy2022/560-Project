@@ -8,7 +8,7 @@ import { API_URL } from "../api/routes"
 import type { PopularBook, BookSummary, Book, Review, GenreRow, ApiResponse } from "../types"
 
 export function Dashboard() {
-  const user_id = 'kevinro.y'
+  const user_id = 7;
   const [topReviewedBooks, setTopReviewedBooks] = useState<PopularBook[]>([]);
   const [savedBooks, setSavedBooks] = useState<BookSummary[]>([]);
   const [genreRows, setGenreRows] = useState<GenreRow[]>([]);
@@ -16,7 +16,7 @@ export function Dashboard() {
   useEffect(() => {
     const getDashboardData = async () => {
       await Promise.all([
-        getTopReviewedBooks(),
+       // getTopReviewedBooks(),
         getSavedBooks(),
         getGenreRows()
       ]);
@@ -39,6 +39,7 @@ export function Dashboard() {
       const response = await axios.post(`${API_URL}/dashboard/saved`, {
           userId: user_id,
       })
+      console.log("SAVED BOOKS RESPONSE: ", response);
       setSavedBooks(response.data.books);
     } catch (error) {
       console.error("ERROR IN getSavedBooks: ", error);
@@ -48,6 +49,7 @@ export function Dashboard() {
   const getGenreRows = async () => {
     try {
       const response = await axios.get(`${API_URL}/dashboard/genre-books`);
+      console.log("GENRE ROWS RESPONSE: ", response.data);
       setGenreRows(response.data.genreRows);
     } catch (error) {
       console.error("ERROR IN getGenreRows: ", error);
@@ -66,7 +68,7 @@ export function Dashboard() {
             return r;
           }
 
-          const mergedBooks = [...(r.books || []), ...newBooks];
+          const mergedBooks = [...(r.genreBooks || []), ...newBooks];
           const uniqueBooksMap = new Map<number, BookSummary>();
           mergedBooks.forEach(book => uniqueBooksMap.set(book.bookId, book));
           return { ...r, books: Array.from(uniqueBooksMap.values()) };

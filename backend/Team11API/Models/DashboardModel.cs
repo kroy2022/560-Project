@@ -79,7 +79,7 @@ namespace Team11API.Models
 
         public async Task<GenreRowsDto> GetGenreRows()
         {
-            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 10 b.BookID, b.ISBN, b.Title, b.Description, b.PublicationDate, a.FirstName + ' ' + a.LastName AS Author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
+            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 10 b.BookID AS bookId, b.ISBN AS isbn, b.Title AS title, b.CoverImage AS coverImage, b.Description AS description, b.PublicationDate AS publicationDate, a.FirstName + ' ' + a.LastName AS author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
             GenreRowsDto genreRowsDto = new GenreRowsDto { genreRows = new List<GenreRow>() };
             using (var conn = _db.GetConnection())
             {
@@ -92,6 +92,7 @@ namespace Team11API.Models
                         while (await reader.ReadAsync())
                         {
                             var genreBooksJson = reader.GetString(2); 
+                            Console.WriteLine($"GENRE BOOKS JSON: {genreBooksJson}");
                             var books = JsonSerializer.Deserialize<List<Book>>(genreBooksJson);
                             
                             GenreRow gw = new GenreRow
@@ -101,6 +102,8 @@ namespace Team11API.Models
                                 genreBooks = books,
                                 offset = 10,
                             };
+
+                            Console.WriteLine($"GENRE ID: {gw.genreId}, Genre: {gw.genre}, books: {gw.genreBooks}");
 
                             genreRowsDto.genreRows.Add(gw);
                         }

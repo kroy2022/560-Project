@@ -19,10 +19,10 @@ export function Navbar() {
 
         <div className="flex gap-6">
           <Link
-            to="/"
+            to="/dashboard"
             className={cn(
               "flex items-center gap-2 text-sm font-medium transition-colors hover:text-zinc-50",
-              isActive("/") ? "text-zinc-50" : "text-zinc-400",
+              isActive("/dashboard") ? "text-zinc-50" : "text-zinc-400",
             )}
           >
             <Home className="h-4 w-4" />
@@ -39,7 +39,7 @@ export function Navbar() {
             <span className="hidden sm:inline">Saved</span>
           </Link>
           <Link
-            to="/"
+            to="/dashboard"
             className="flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-50"
           >
             <Grid3x3 className="h-4 w-4" />

@@ -7,5 +7,6 @@ interface GenreRowComponentProps {
 }
 
 export function GenreRowComponent({ genreRow, getGenreBooksWithOffset }: GenreRowComponentProps) {
-  return <BookRow title={genreRow.genre} books={genreRow.books}/>
+  console.log("BOOKS IN GENREROWCOMPONENT: ", genreRow);
+  return <BookRow title={genreRow.genre} books={genreRow.genreBooks}/>
 }

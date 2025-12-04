@@ -29,7 +29,7 @@ namespace Team11API.DTOs
             genre = "";
             publicationDate = DateTime.Today;
         }
-
+        
         public int bookId { get; set; }
         public string isbn { get; set; }
         public string title { get; set; }
@@ -39,6 +39,7 @@ namespace Team11API.DTOs
         public string genre { get; set; }
 
         public DateTime publicationDate { get; set; }
+        public int? isSaved { get; set; }
     }
 
     public class GenreRow

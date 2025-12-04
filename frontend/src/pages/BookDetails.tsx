@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { Star, Calendar, Tag, ArrowLeft } from "lucide-react"
+import { Star, Calendar, Tag, ArrowLeft, Bookmark, BookmarkCheck } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
@@ -11,14 +11,19 @@ import { bookDetails, bookReviews, topReviewedBooks } from "../data/mockData"
 import axios from "axios"
 import { API_URL } from "../api/routes"
 import { Label } from "../components/ui/label"
+import LoadingScreen from "../components/LoadingScreen"
+import { Book, PopularBook, Review} from "../types"
 
 export function BookDetails() {
-  const user_id = 'kevinro.y'
+  const user_id = 7;
+  const name = 'Kevin Roy'
   const { bookId } = useParams<{ bookId: string }>()
-  const book = bookDetails[Number(bookId)]
-  const reviews = bookReviews[Number(bookId)] || []
-  const similarBooks = topReviewedBooks.slice(0, 6)
-  
+  const [book, setBook] = useState<Book | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [similarBooks, setSimilarBooks] = useState<PopularBook[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingBook, setIsSavingBook] = useState(false);
   const [reviewRating, setReviewRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [reviewContent, setReviewContent] = useState("")
@@ -28,8 +33,6 @@ export function BookDetails() {
   useEffect(() => {
     const getBookData = async () => {
       await getBookInfo();
-      await getBookReviews();
-      await getSimilarBooks();
     }
 
     getBookData();
@@ -37,8 +40,12 @@ export function BookDetails() {
 
   const getBookInfo = async () => {
     try {
-      const response = await axios.get(`${API_URL}/book/info?bookId=${bookId}`);
-    //  setBook(response.data.book);
+      const response = await axios.get(`${API_URL}/book/info?bookId=${bookId}&userId=${user_id}`);
+      console.log("BOOK INFO RESPONSE: ", response);
+      setBook(response.data.book);
+      setIsLoading(false);
+      await getBookReviews();
+      await getSimilarBooks(response.data.book.genre, response.data.book.author);
     } catch (error) {
       console.error("Error in getBookInfo: ", error);
     }
@@ -46,18 +53,20 @@ export function BookDetails() {
 
   const getBookReviews = async () => {
     try {
-      const response = await axios.get(`${API_URL}/book/similar-books?genre=${book.bookId}&author=${book.author}`);
-    //  setBookReviews(response.data.bookReviews);
+      const response = await axios.get(`${API_URL}/book/reviews?bookId=${bookId}`);
+      console.log("REVIEWS RESPONSE: ", response);
+      setReviews(response.data.reviews || []);
     } catch (error) {
       console.error("Error in getSimilarBooks: ", error);
     }
   }
 
   // get 10 random books => 5 same author, 5 same genre
-  const getSimilarBooks = async () => {
+  const getSimilarBooks = async (genre: string, author: string) => {
     try {
-      const response = await axios.get(`${API_URL}/book/similar-books?genre=${book.bookId}&author=${book.author}`);
-    //  setSimilarBooks(response.data.similarBooks);
+      const response = await axios.get(`${API_URL}/book/similar-books?genre=${genre}&author=${author}&bookId=${bookId}`);
+      console.log("SIMILAR BOOKS RESPONSE: ", response);
+      setSimilarBooks(response.data.similarBooks || []);
     } catch (error) {
       console.error("Error in getSimilarBooks: ", error);
     }
@@ -66,15 +75,32 @@ export function BookDetails() {
   // Below functions are for updates / inserts into DB
 
   const changeSavedStatus = async () => {
-    // try {
-    //   const response = await axios.post(`${API_URL}/book/save`, {
-    //       userId: user_id,
-    //       bookId: book.bookId,
-    //       isCurrentlySaved: book.isCurrentlySaved
-    //   })
-    // } catch (error) {
-    //   console.error("ERROR IN changeSavedStatus: ", error);
-    // }
+    setIsSavingBook(true);
+    try {
+      console.log("IS CURRENTLY SAVED THATS CHANGING: ", book?.isSaved);
+      const response = await axios.post(`${API_URL}/book/save`, {
+          userId: user_id,
+          bookId: bookId,
+          isCurrentlySaved: book?.isSaved
+      })
+
+      console.log("CHANGE SAVE STATUS RESPONSE: ", response);
+
+      if (response.status == 200) {
+        setBook({
+          ...book!, 
+          isSaved: Number(!book!.isSaved)
+        });
+      } else {
+        alert("Something went wrong when saving book");
+        console.error("ERROR SAVING BOOK: ", response);
+      }
+    } catch (error) {
+      console.error("ERROR IN changeSavedStatus: ", error);
+      alert("Failed to update saved status. Please try again.");
+    } finally {
+      setIsSavingBook(false);
+    }
   }
 
   const addReviewToBook = async (e: React.FormEvent) => {
@@ -101,21 +127,35 @@ export function BookDetails() {
       })
       
       console.log("Review submitted:", response.data)
+
+      const today = new Date();          
+      const reviewDateString = today.toISOString();
       
+      // Increase review array
+      const newReview = {
+        reviewId: response.data.reviewId,
+        userId: user_id,
+        userName: name,
+        rating: reviewRating,
+        content: reviewContent,
+        reviewDate: reviewDateString
+      }
+      setReviews([...reviews, newReview])
+            
       // Reset form
       setReviewRating(0)
       setReviewContent("")
       
-      // Increase review array
-      
-      
-      alert("Review submitted successfully!")
     } catch (error) {
       console.error("Error submitting review:", error)
       alert("Failed to submit review. Please try again.")
     } finally {
       setIsSubmittingReview(false)
     }
+  }
+
+  if (isLoading) {
+    <LoadingScreen />
   }
 
   if (!book) {
@@ -132,12 +172,16 @@ export function BookDetails() {
     )
   }
 
-  const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length || 0
+  const avgRating = reviews.length
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 0;
+
+  const hasWritenReview = reviews.some((review) => review.userId == user_id);
 
   return (
     <div className="min-h-screen bg-zinc-950 py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <Link to="/" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-50 mb-6 transition-colors">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-50 mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
@@ -153,9 +197,29 @@ export function BookDetails() {
               <Button className="w-full" size="lg">
                 Read Now
               </Button>
-              <Button className="w-full bg-transparent" variant="outline" size="lg">
-                Add to Saved
-              </Button>
+              {book.isSaved ? (
+                <Button 
+                  className="w-full bg-green-600/20 border-green-600 text-green-500 hover:bg-green-600/30 hover:text-green-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={() => changeSavedStatus()}
+                  disabled={isSavingBook}
+                >
+                  <BookmarkCheck className={`h-5 w-5 mr-2 ${isSavingBook ? 'animate-pulse' : ''}`} />
+                  {isSavingBook ? 'Updating...' : 'Saved'}
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-green-600 hover:text-green-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={() => changeSavedStatus()}
+                  disabled={isSavingBook}
+                >
+                  <Bookmark className={`h-5 w-5 mr-2 ${isSavingBook ? 'animate-pulse' : ''}`} />
+                  {isSavingBook ? 'Saving...' : 'Add to Saved'}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -216,7 +280,7 @@ export function BookDetails() {
 
               <TabsContent value="reviews" className="space-y-6">
                 {/* Write a Review Form */}
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                {!hasWritenReview && (<Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader>
                     <CardTitle className="text-xl">Write a Review</CardTitle>
                   </CardHeader>
@@ -278,7 +342,7 @@ export function BookDetails() {
                       </Button>
                     </form>
                   </CardContent>
-                </Card>
+                </Card>)}
 
                 {/* Reviews List with Scrollable Container */}
                 <div>
@@ -326,11 +390,19 @@ export function BookDetails() {
 
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-zinc-50">Similar Books</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {similarBooks.map((similarBook) => (
-              <BookCard key={similarBook.bookId} book={similarBook} />
-            ))}
-          </div>
+          {similarBooks.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {similarBooks.map((similarBook) => (
+                <BookCard key={similarBook.bookId} book={similarBook} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 bg-zinc-900 rounded-lg border border-zinc-800">
+              <p className="text-zinc-400 text-center">
+                No similar books found for {book.title ?? "this title"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.IdentityModel.Tokens;
 using Team11API.DTOs;
 using Team11API.Models;
@@ -18,22 +19,27 @@ public class BookController : ControllerBase
     public BookController(Database db)
     {
         _db = db;
+        _bookModel.SetDatabaseValue(_db);
     }
 
     // GET REQUESTS
 
     [HttpGet("info")]
-    public async Task<IActionResult> GetBookInformationRoute([FromQuery] int? bookId)
+    public async Task<IActionResult> GetBookInformationRoute([FromQuery] int? bookId, [FromQuery] int? userId)
     {
         int finalBookId = bookId ?? -1;
+        int finalUserId = userId ?? -1;
 
         if (finalBookId == -1)
         {
             return BadRequest("Invalid bookId.");
+        } else if (finalUserId == -1)
+        {
+            return BadRequest("Invalid userId.");
         }
 
         Console.WriteLine($"BOOK ID: {finalBookId}");
-        BookInformationDto result = await _bookModel.GetBookInformation(finalBookId);
+        BookInformationDto result = await _bookModel.GetBookInformation(finalBookId, finalUserId);
         Console.WriteLine($"BOOK INFORMATION RESULT: {result}");
         return Ok(result); 
     }
@@ -56,10 +62,11 @@ public class BookController : ControllerBase
 
     // This endpoint retrieves 5 books with same author, and 5 books with same genre. If less than 5 books with same author that gap is filled with books in genre. 
     [HttpGet("similar-books")]
-    public async Task<IActionResult> GetSimilarBooksRoute([FromQuery] string? genre, [FromQuery] string? author)
+    public async Task<IActionResult> GetSimilarBooksRoute([FromQuery] string? genre, [FromQuery] string? author, [FromQuery] int? bookId)
     {
         string finalGenre = genre ?? "";
         string finalAuthor = author ?? "";
+        int finalBookId = bookId ?? -1;
 
         if (string.IsNullOrEmpty(finalGenre))
         {
@@ -67,10 +74,13 @@ public class BookController : ControllerBase
         } else if (string.IsNullOrEmpty(finalAuthor))
         {
             return BadRequest("Author is empty");
+        } else if (finalBookId == -1)
+        {
+          return BadRequest("Invalid bookId.");  
         }
 
         Console.WriteLine($"GENRE: {finalGenre} + AUTHOR: {finalAuthor}");
-        SavedBooksDto result = await _bookModel.GetSimilarBooks(finalGenre, finalAuthor);
+        SavedBooksDto result = await _bookModel.GetSimilarBooks(finalGenre, finalAuthor, finalBookId);
         Console.WriteLine($"GET SIMILAR BOOKS RESULT: {result}");
         return Ok(result);
     }   
@@ -81,6 +91,7 @@ public class BookController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
+            Console.WriteLine($"INVALID MODEL STATE: {ModelState}");
             return BadRequest(ModelState);
         }
 
@@ -88,7 +99,7 @@ public class BookController : ControllerBase
         bool valid;
 
         // unsave
-        if (body.isCurrentlySaved)
+        if (body.isCurrentlySaved == 1)
         {
             valid = await _bookModel.UnsaveBook(body);
         } // save

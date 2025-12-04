@@ -17,7 +17,7 @@ namespace Team11API.Models
             _db = db;
         }
 
-        public async Task<BookInformationDto> GetBookInformation(int bookId)
+        public async Task<BookInformationDto> GetBookInformation(int bookId, int userId)
         {
             string sql = @"
                 SELECT 
@@ -28,7 +28,16 @@ namespace Team11API.Models
                     b.PublicationDate,
                     b.CoverImage,
                     a.FirstName + ' ' + a.LastName AS Author,
-                    g.Name AS Genre
+                    g.Name AS Genre,
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM SavedBooks sb
+                            WHERE sb.BookID = b.BookID 
+                            AND sb.UserID = @UserID
+                        ) 
+                        THEN 1 ELSE 0 
+                    END AS isSaved
                 FROM Books b
                 JOIN Authors a ON b.AuthorID = a.AuthorID
                 JOIN Genres g ON b.GenreID = g.GenreID
@@ -43,6 +52,7 @@ namespace Team11API.Models
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@BookID", bookId);
+                    cmd.Parameters.AddWithValue("@UserID", userId);
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
@@ -56,7 +66,8 @@ namespace Team11API.Models
                                 description = reader.GetString(reader.GetOrdinal("Description")),
                                 coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
                                 author = reader.GetString(reader.GetOrdinal("Author")),
-                                genre = reader.GetString(reader.GetOrdinal("Genre"))
+                                genre = reader.GetString(reader.GetOrdinal("Genre")),
+                                isSaved = reader.GetInt32(reader.GetOrdinal("isSaved"))
                             };
                         }
                     }
@@ -69,18 +80,21 @@ namespace Team11API.Models
         public async Task<BookReviewsDto> GetBookReviews(int bookId)
         {
             string sql = @"SELECT 
-                r.ReviewID,
-                u.UserID,
-                u.FirstName + ' ' + u.LastName AS Username,
-                r.Rating,
-                r.Content,
-                r.ReviewDate
+                r.ReviewID AS reviewId,
+                u.UserID AS userId,
+                u.FirstName + ' ' + u.LastName AS userName,
+                r.Rating AS rating,
+                r.Content AS content, 
+                r.ReviewDate AS reviewDate
             FROM Reviews r
             JOIN Users u 
                 ON r.UserID = u.UserID
             WHERE r.BookID = @BookID";
 
-            BookReviewsDto brd = new BookReviewsDto();
+            BookReviewsDto brd = new BookReviewsDto
+            {
+                reviews = new List<BookReview>()
+            };
 
             using (var conn = _db.GetConnection())
             {
@@ -99,7 +113,7 @@ namespace Team11API.Models
                                 reviewId = reader.GetInt32(reader.GetOrdinal("ReviewID")),
                                 userId = reader.GetInt32(reader.GetOrdinal("UserID")),
                                 userName = reader.GetString(reader.GetOrdinal("Username")),
-                                rating = reader.GetInt32(reader.GetOrdinal("Rating")),
+                                rating = reader.GetByte(reader.GetOrdinal("Rating")),
                                 content = reader.GetString(reader.GetOrdinal("Content")),
                                 reviewDate = reader.GetDateTime(reader.GetOrdinal("ReviewDate")),
                             };
@@ -113,7 +127,7 @@ namespace Team11API.Models
             return brd;
         }
 
-        public async Task<SavedBooksDto> GetSimilarBooks(string genre, string author)
+        public async Task<SavedBooksDto> GetSimilarBooks(string genre, string author, int bookId)
         {
             string sql = @"
             WITH AuthorBooks AS (
@@ -128,7 +142,6 @@ namespace Team11API.Models
                 WHERE a.FirstName + ' ' + a.LastName = @Author
                 ORDER BY b.BookID
             ),
-
             GenreBooks AS (
                 SELECT TOP 5
                     b.BookID,
@@ -138,17 +151,25 @@ namespace Team11API.Models
                     2 AS Priority
                 FROM Books b
                 JOIN Authors a ON b.AuthorID = a.AuthorID
-                JOIN Genre g ON b.GenreID = g.GenreID
+                JOIN Genres g ON b.GenreID = g.GenreID
                 WHERE g.Name = @Genre
                 ORDER BY b.BookID
+            ),
+            Combined AS (
+                SELECT * FROM AuthorBooks
+                UNION ALL
+                SELECT * FROM GenreBooks
+            ),
+            Deduped AS (
+                SELECT
+                    *,
+                    ROW_NUMBER() OVER (PARTITION BY BookID ORDER BY Priority) AS rn
+                FROM Combined
             )
 
-            SELECT TOP 10 *
-            FROM (
-                SELECT * FROM AuthorBooks
-                UNION
-                SELECT * FROM GenreBooks
-            ) x
+            SELECT TOP 10 BookID, Title, CoverImage, Author, Priority
+            FROM Deduped
+            WHERE rn = 1 AND BookID <> @BookID
             ORDER BY Priority, BookID;
             ";
 
@@ -165,6 +186,7 @@ namespace Team11API.Models
                 {
                     cmd.Parameters.AddWithValue("@Genre", genre);
                     cmd.Parameters.AddWithValue("@Author", author);
+                    cmd.Parameters.AddWithValue("@BookID", bookId);
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
