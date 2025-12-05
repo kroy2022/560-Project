@@ -36,14 +36,14 @@ export function Navbar({ showSearchBar, getSearchResults }: NavbarProps ) {
               <span>Home</span>
             </Link>
             <Link
-              to="/saved"
+              to="/books"
               className={cn(
                 "flex items-center gap-2 text-sm font-medium transition-colors hover:text-zinc-50",
-                isActive("/saved") ? "text-zinc-50" : "text-zinc-400",
+                isActive("/books") ? "text-zinc-50" : "text-zinc-400",
               )}
             >
               <Bookmark className="h-4 w-4" />
-              <span>Saved</span>
+              <span>Books</span>
             </Link>
             <Link
               to="/authors"
@@ -66,7 +66,7 @@ export function Navbar({ showSearchBar, getSearchResults }: NavbarProps ) {
               <input
                 type="text"
                 onChange={(e) => getSearchResults!(e.target.value)}
-                placeholder="Search for books..."
+                placeholder="Search for books, authors, or genres..."
                 className="w-full h-11 pl-12 pr-4 bg-zinc-900/80 border border-zinc-700 rounded-full text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent focus:bg-zinc-900 transition-all duration-200 shadow-sm"
               />
             </div>

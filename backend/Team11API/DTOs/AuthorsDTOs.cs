@@ -7,7 +7,7 @@ namespace Team11API.DTOs
     // Helper Classes
     public class Author : AuthorSummary
     {
-        public string[] genres { get; set; } 
+        public List<string> genres { get; set; } 
         public int totalBooks { get; set; } 
         public double? avgRating { get; set; } 
         public string? description { get; set; } 
@@ -28,5 +28,15 @@ namespace Team11API.DTOs
         public List<AuthorSummary> authors { get; set; }
         public int totalBooks { get; set; }
         public int totalGenres { get; set; } 
+    }
+
+    public class AuthorInformationDto
+    {
+        public Author author { get; set; }
+    }
+
+    public class AuthorBooksDto
+    {
+        public List<BookSummary> authorBooks { get; set; }
     }
 }

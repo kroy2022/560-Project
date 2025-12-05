@@ -80,10 +80,28 @@ public class BookController : ControllerBase
         }
 
         Console.WriteLine($"GENRE: {finalGenre} + AUTHOR: {finalAuthor}");
-        SavedBooksDto result = await _bookModel.GetSimilarBooks(finalGenre, finalAuthor, finalBookId);
+        BooksDto result = await _bookModel.GetSimilarBooks(finalGenre, finalAuthor, finalBookId);
         Console.WriteLine($"GET SIMILAR BOOKS RESULT: {result}");
         return Ok(result);
     }   
+
+    [HttpGet("books")]
+    public async Task<IActionResult> GetBooksWithFilterRoute([FromQuery] int? authorId, [FromQuery] int? genreId)
+    {   
+        BooksDto result;
+        if (authorId is int aid)
+        {
+            result = await _bookModel.GetBooksForAuthor(aid);
+        } else if (genreId is int gid)
+        {
+            result = await _bookModel.GetBooksFromGenre(gid);
+        } else
+        {
+            result = await _bookModel.GetBooks();
+        }
+
+        return Ok(result);
+    }
 
     // POST REQUESTS
     [HttpPost("save")]

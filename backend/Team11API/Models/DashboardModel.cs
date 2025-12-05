@@ -229,7 +229,7 @@ namespace Team11API.Models
             FROM Books b
             JOIN Authors a ON b.AuthorID = a.AuthorID
             JOIN Genres g ON b.GenreID = g.GenreID
-            WHERE b.Title LIKE '%' + @SearchQuery + '%'
+            WHERE b.Title LIKE '%' + @SearchQuery + '%' OR a.FirstName + ' ' + a.LastName LIKE '%' + @SearchQuery + '%' OR g.Name LIKE '%' + @SearchQuery + '%'
             ORDER BY b.BookID;
             ";
             SearchResultsDto srd = new SearchResultsDto

@@ -1,75 +1,105 @@
 import { useState, useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
-import { BookOpen, Calendar, MapPin, Award, ArrowLeft } from "lucide-react"
+import { BookOpen, ArrowLeft } from "lucide-react"
 import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { BookCard } from "../components/BookCard"
+import { Card, CardContent } from "../components/ui/card"
 import { Navbar } from "../components/Navbar"
-import type { Author, BookSummary } from "../types"
+import type { Author } from "../types"
+import { API_URL } from "../api/routes"
+import axios from "axios"
 
-export function Authors() {
-    const { bookId } = useParams<{ authorId: string }>()
-    const [selectedTab, setSelectedTab] = useState("about")
-    const [author, setAuthor] = useState<Author>({
-        authorId: 1,
-        name: "J.K. Rowling",
-        description: "Joanne Rowling, better known by her pen name J.K. Rowling, is a British author and philanthropist. She is best known for writing the Harry Potter fantasy series, which has won multiple awards and sold more than 500 million copies, becoming the best-selling book series in history. The books have been the basis for a film series, over which Rowling had overall approval on the scripts and was a producer on the final films. Born in Yate, Gloucestershire, Rowling was working as a researcher and bilingual secretary for Amnesty International when she conceived the idea for the Harry Potter series while on a delayed train from Manchester to London in 1990.",
-        coverImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-        genres: ["Fantasy", "Young Adult", "Mystery", "Drama"],
-        totalBooks: 14,
-        avgRating: 4.7
-    });
-    const [authorBooks, setAuthorBooks] = useState<BookSummary[]>([
-        {
-            bookId: 1,
-            isbn: "",
-            title: "Harry Potter and the Philosopher's Stone",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=300&h=450&fit=crop",
-            genre: "Fantasy"
-        },
-        {
-            bookId: 2,
-            isbn: "",
-            title: "Harry Potter and the Chamber of Secrets",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=450&fit=crop",
-            genre: "Fantasy"
-        },
-        {
-            bookId: 3,
-            isbn: "",
-            title: "Harry Potter and the Prisoner of Azkaban",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=300&h=450&fit=crop",
-            genre: "Fantasy"
-        },
-        {
-            bookId: 4,
-            isbn: "",
-            title: "Harry Potter and the Goblet of Fire",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=450&fit=crop",
-            genre: "Fantasy"
-        },
-        {
-            bookId: 5,
-            isbn: "",
-            title: "Harry Potter and the Order of the Phoenix",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=300&h=450&fit=crop",
-            genre: "Fantasy"
-        },
-        {
-            bookId: 6,
-            isbn: "",
-            title: "The Casual Vacancy",
-            author: "J.K. Rowling",
-            coverImage: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&h=450&fit=crop",
-            genre: "Drama"
+export function AuthorPage() {
+    const { authorId } = useParams<{ authorId: string }>()
+    const [author, setAuthor] = useState<Author | null>(null);
+
+    useEffect(() => {
+        const getAuthorInfo = async () => {
+            try {
+                console.log("AUTHOR ID: ", authorId);
+                const response = await axios.get(`${API_URL}/authors/author?authorId=${authorId}`);
+                console.log("AUTHOR INFO RESPONSE: ", response);
+                setAuthor(response.data.author);
+            } catch (error) {
+                console.error("ERROR IN getAuthorInfo ", error);
+            }    
         }
-    ]);
+
+        getAuthorInfo();
+    }, [])
+
+    // Loading state when author is null
+    if (!author) {
+        return (
+            <div className="min-h-screen bg-zinc-950">
+                <Navbar showSearchBar={false} />
+                <div className="min-h-screen bg-zinc-950 py-8 px-4 md:px-8">
+                    <div className="max-w-7xl mx-auto">
+                        <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-50 mb-6 transition-colors">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Home
+                        </Link>
+
+                        <div className="grid md:grid-cols-[300px,1fr] lg:grid-cols-[400px,1fr] gap-8 mb-12">
+                            {/* Author Image & Stats Skeleton */}
+                            <div>
+                                {/* Image Skeleton */}
+                                <div className="relative">
+                                    <div className="w-full aspect-square rounded-lg bg-zinc-800 animate-pulse" />
+                                </div>
+                                
+                                {/* Stats Card Skeleton */}
+                                <Card className="mt-4 bg-zinc-900/50 border-zinc-800">
+                                    <CardContent className="pt-6">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse mb-2" />
+                                                <div className="h-8 w-16 bg-zinc-800 rounded animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <div className="h-4 w-28 bg-zinc-800 rounded animate-pulse mb-2" />
+                                                <div className="h-8 w-20 bg-zinc-800 rounded animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <div className="h-4 w-16 bg-zinc-800 rounded animate-pulse mb-2" />
+                                                <div className="flex flex-wrap gap-2">
+                                                    <div className="h-6 w-16 bg-zinc-800 rounded-full animate-pulse" />
+                                                    <div className="h-6 w-20 bg-zinc-800 rounded-full animate-pulse" />
+                                                    <div className="h-6 w-14 bg-zinc-800 rounded-full animate-pulse" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Author Details Skeleton */}
+                            <div className="space-y-6">
+                                {/* Header with Name and Button Skeleton */}
+                                <div className="flex items-start justify-between gap-6">
+                                    <div>
+                                        <div className="h-10 w-64 bg-zinc-800 rounded animate-pulse mb-4" />
+                                        <div className="h-5 w-32 bg-zinc-800 rounded animate-pulse" />
+                                    </div>
+                                    <div className="h-10 w-32 bg-zinc-800 rounded animate-pulse" />
+                                </div>
+
+                                {/* Content Skeleton */}
+                                <div className="space-y-4 mt-8">
+                                    <div className="h-6 w-32 bg-zinc-800 rounded animate-pulse mb-3" />
+                                    <div className="space-y-2">
+                                        <div className="h-4 w-full bg-zinc-800 rounded animate-pulse" />
+                                        <div className="h-4 w-full bg-zinc-800 rounded animate-pulse" />
+                                        <div className="h-4 w-5/6 bg-zinc-800 rounded animate-pulse" />
+                                        <div className="h-4 w-4/6 bg-zinc-800 rounded animate-pulse" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-zinc-950">
@@ -131,63 +161,39 @@ export function Authors() {
                 </Card>
                 </div>
 
-                {/* Author Details */}
-                <div className="space-y-6">
+            {/* Author Details */}
+            <div className="space-y-6">
+              <div className="flex items-start justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold text-zinc-50 mb-4 text-balance">{author.name}</h1>
+                  <h1 className="text-4xl font-bold text-zinc-50 mb-4 text-balance">{author.name}</h1>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-zinc-400 mb-6">
-                    <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        <span>{author.totalBooks} Books</span>
-                    </div>
-                    </div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400">
+                    <BookOpen className="h-4 w-4" />
+                    <span>{author.totalBooks} {author.totalBooks === 1 ? 'Book' : 'Books'}</span>
+                  </div>
                 </div>
 
-                <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                    <TabsList>
-                    <TabsTrigger value="about">About</TabsTrigger>
-                    <TabsTrigger value="books">Books ({authorBooks.length})</TabsTrigger>
-                    </TabsList>
+                <Link to={`/books?authorId=${authorId}`}>
+                  <Button 
+                    variant="outline" 
+                    className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-red-600 hover:text-red-500 transition-all duration-200 whitespace-nowrap"
+                  >
+                    View All Books
+                  </Button>
+                </Link>
+              </div>
 
-                    <TabsContent value="about" className="space-y-4 mt-5">
-                    <div>
-                        <h3 className="text-lg font-semibold text-zinc-50 mb-3">Biography</h3>
-                        <p className="text-zinc-400 leading-relaxed">{author.description}</p>
-                    </div>
-
-                    </TabsContent>
-
-                    <TabsContent value="books" className="space-y-4">
-                    <div>
-                        <h3 className="text-lg font-semibold text-zinc-50 mb-4">
-                        Books by {author.name}
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {authorBooks.map((book) => (
-                            <BookCard key={book.bookId} book={book} />
-                        ))}
-                        </div>
-                    </div>
-                    </TabsContent>
-                </Tabs>
-                </div>
+              {/* About Section */}
+              <div className="space-y-4 mt-8">
+                <h3 className="text-2xl font-semibold text-zinc-50 mb-4">About the Author</h3>
+                {author.description ? (
+                  <p className="text-zinc-400 leading-relaxed text-lg">{author.description}</p>
+                ) : (
+                  <p className="text-zinc-500 italic">No biography available for this author.</p>
+                )}
+              </div>
             </div>
-
-            {/* More Books Section */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-zinc-50">Popular Books</h2>
-                <Button variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                    View All
-                </Button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {authorBooks.slice(0, 6).map((book) => (
-                    <BookCard key={book.bookId} book={book} />
-                ))}
-                </div>
-            </div>
+          </div>
             </div>
         </div>
         </div>

@@ -5,8 +5,10 @@ import { UserRoundPen, BookOpen, ArrowRight } from "lucide-react"
 import { Card, CardContent } from "../components/ui/card"
 import axios from "axios";
 import { API_URL } from "../api/routes";
+import { useNavigate } from "react-router-dom";
 
 export function Authors({ user_id, user_name }: AuthValues) {
+    const navigate = useNavigate();
     const [authors, setAuthors] = useState<AuthorSummary[]>([]);
     const [totalBooks, setTotalBooks] = useState(0);
     const [totalGenres, setTotalGenres] = useState(0);
@@ -14,8 +16,8 @@ export function Authors({ user_id, user_name }: AuthValues) {
     useEffect(() => {
         const getAuthorsInformation = async () => {
             try {
-                const response = await axios.get(`${API_URL}/authorsau`);
-                console.log("FEATURED RESPONSE: ", response);
+                const response = await axios.get(`${API_URL}/authors/overview`);
+                console.log("ALL AUTHORS INFO RESPONSE: ", response);
                 setAuthors(response.data.authors);
                 setTotalBooks(response.data.totalBooks);
                 setTotalGenres(response.data.totalGenres);
@@ -63,7 +65,7 @@ export function Authors({ user_id, user_name }: AuthValues) {
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm text-zinc-500 mb-1">Books Available</p>
+                                        <p className="text-sm text-zinc-500 mb-1">Total Books</p>
                                         <p className="text-3xl font-bold text-zinc-50">{totalBooks}+</p>
                                     </div>
                                     <BookOpen className="h-12 w-12 text-red-600/30" />
@@ -89,6 +91,7 @@ export function Authors({ user_id, user_name }: AuthValues) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                         {authors.map((author) => (
                             <Card 
+                                onClick={() => navigate(`/author/${author.authorId}`)}
                                 key={author.authorId}
                                 className="group bg-zinc-900/50 border-zinc-800 hover:border-red-600/50 hover:bg-zinc-900 transition-all duration-300 cursor-pointer overflow-hidden"
                             >

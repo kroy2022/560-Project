@@ -21,12 +21,27 @@ public class AuthorsController : ControllerBase
 
     // GET REQUESTS
 
-    [HttpGet("")]
+    [HttpGet("overview")]
     public async Task<IActionResult> GetAllAuthorsRoute()
     {
-        AllAuthorsDto result = _authorsModel.
+        AllAuthorsDto result = await _authorsModel.GetAllAuthors();
+        return Ok(result);
     }
 
+    [HttpGet("author")]
+    public async Task<IActionResult> GetAuthorInformationRoute([FromQuery] int? authorId)
+    {
+        Console.WriteLine($"IN AUTHOR ROUTE, author id: {authorId}");
+        int finalAuthorId = authorId ?? -1;
+
+        if (finalAuthorId == -1)
+        {
+            return BadRequest("Invalid author id");
+        }
+
+        AuthorInformationDto result = await _authorsModel.GetAuthorInfo(finalAuthorId);
+        return Ok(result);
+    }    
 
     // POST REQUESTS
 

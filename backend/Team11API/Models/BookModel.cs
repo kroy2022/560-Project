@@ -127,7 +127,7 @@ namespace Team11API.Models
             return brd;
         }
 
-        public async Task<SavedBooksDto> GetSimilarBooks(string genre, string author, int bookId)
+        public async Task<BooksDto> GetSimilarBooks(string genre, string author, int bookId)
         {
             string sql = @"
             WITH AuthorBooks AS (
@@ -173,9 +173,9 @@ namespace Team11API.Models
             ORDER BY Priority, BookID;
             ";
 
-            SavedBooksDto sbt = new SavedBooksDto
+            BooksDto sbt = new BooksDto
             {
-                similarBooks = new List<BookSummary>()
+                books = new List<BookSummary>()
             };
 
             using (var conn = _db.GetConnection())
@@ -200,13 +200,158 @@ namespace Team11API.Models
                                 author = reader.GetString(reader.GetOrdinal("Author")),
                             };
 
-                            sbt.similarBooks.Add(bs);
+                            sbt.books.Add(bs);
                         }
                     }
                 }
             }
 
             return sbt;
+        }
+
+        public async Task<BooksDto> GetBooksForAuthor(int authorId)
+        {
+            string sql = @"
+                SELECT
+                    b.BookID,
+                    b.Title,
+                    b.CoverImage,
+                    a.FirstName + ' ' + a.LastName AS Author
+                FROM Books b
+                JOIN Authors a
+                    ON b.AuthorID = a.AuthorID
+                WHERE b.AuthorID = @AuthorID
+            ";
+
+            BooksDto bd = new BooksDto
+            {
+                books = new List<BookSummary>()
+            };
+
+            using (var conn = _db.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@AuthorID", authorId);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            BookSummary bs = new BookSummary
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                            };
+
+                            bd.books.Add(bs);
+                        }
+                    }
+                }
+            }
+
+            return bd;
+        }
+
+        public async Task<BooksDto> GetBooksFromGenre(int genreId)
+        {
+            string sql = @"
+                SELECT
+                    b.BookID,
+                    b.Title,
+                    b.CoverImage,
+                    a.FirstName + ' ' + a.LastName AS Author,
+                    g.Name
+                FROM Books b
+                JOIN Authors a
+                    ON b.AuthorID = a.AuthorID 
+                JOIN Genres g
+                    ON b.GenreID = g.GenreID
+                WHERE b.GenreID = @GenreID
+            ";
+
+            BooksDto bd = new BooksDto
+            {
+                books = new List<BookSummary>()
+            };
+
+            using (var conn = _db.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@GenreID", genreId);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            BookSummary bs = new BookSummary
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                                genre = reader.GetString(reader.GetOrdinal("Name"))
+                            };
+
+                            bd.books.Add(bs);
+                        }
+                    }
+                }
+            }
+
+            return bd;
+        }
+
+        public async Task<BooksDto> GetBooks()
+        {
+            string sql = @"
+                SELECT
+                    b.BookID,
+                    b.Title,
+                    b.CoverImage,
+                    a.FirstName + ' ' + a.LastName AS Author
+                FROM Books b
+                JOIN Authors a
+                    ON b.AuthorID = a.AuthorID
+            ";
+
+            BooksDto bd = new BooksDto
+            {
+                books = new List<BookSummary>()
+            };
+
+            using (var conn = _db.GetConnection())
+            {
+                await conn.OpenAsync();
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            BookSummary bs = new BookSummary
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                            };
+
+                            bd.books.Add(bs);
+                        }
+                    }
+                }
+            }
+
+            return bd;
         }
 
         public async Task<bool> SaveBook(SaveBookBody body)

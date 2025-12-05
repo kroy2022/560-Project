@@ -31,6 +31,7 @@ namespace Team11API.DTOs
         public string title { get; set; }
         public string coverImage { get; set; }
         public string author { get; set; }
+        public string? genre { get; set; }
     }
 
     public class BookReview
@@ -65,9 +66,9 @@ namespace Team11API.DTOs
         public List<BookReview> reviews { get; set; }
     }
 
-    public class SavedBooksDto
+    public class BooksDto
     {
-        public List<BookSummary> similarBooks { get; set; }
+        public List<BookSummary> books { get; set; }
     }
 
     public class CreateReviewDto

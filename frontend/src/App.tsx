@@ -3,9 +3,10 @@ import { Navbar } from "./components/Navbar"
 import { SignIn } from "./pages/SignIn"
 import { SignUp } from "./pages/SignUp"
 import { Dashboard } from "./pages/Dashboard"
-import { SavedBooks } from "./pages/SavedBooks"
 import { BookDetails } from "./pages/BookDetails"
 import { Authors } from "./pages/Authors"
+import { AuthorPage } from "./components/AuthorPage"
+import { AllBooks } from "./pages/AllBooks"
 import AuthGuard from "./pages/AuthGuard"
 
 function App() {
@@ -23,12 +24,7 @@ function App() {
               <AuthGuard>
                 <Dashboard />
               </AuthGuard>
-            } />
-          <Route path="/saved" element={
-              <AuthGuard>
-                <SavedBooks />
-              </AuthGuard>
-            } />
+            } />b
           <Route path="/book/:bookId" element={
               <AuthGuard>
                 <BookDetails />
@@ -41,9 +37,14 @@ function App() {
             } />
           <Route path="/author/:authorId" element={
               <AuthGuard>
-                <Authors />
+                <AuthorPage />
               </AuthGuard>
-            } />  
+            } />
+          <Route path="/books" element={
+              <AuthGuard>
+                <AllBooks />
+              </AuthGuard>
+            } />
         </Routes>
     </BrowserRouter>
   )

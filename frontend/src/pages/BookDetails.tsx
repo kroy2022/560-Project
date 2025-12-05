@@ -65,7 +65,7 @@ export function BookDetails({ user_id, user_name }: AuthValues) {
     try {
       const response = await axios.get(`${API_URL}/book/similar-books?genre=${genre}&author=${author}&bookId=${bookId}`);
       console.log("SIMILAR BOOKS RESPONSE: ", response);
-      setSimilarBooks(response.data.similarBooks || []);
+      setSimilarBooks(response.data.books || []);
     } catch (error) {
       console.error("Error in getSimilarBooks: ", error);
     }
