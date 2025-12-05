@@ -41,7 +41,7 @@ namespace Team11API.Models
 
             FeaturedBookDto fbd = new FeaturedBookDto
             {
-                featuredBook = new Book()
+                featuredBook = new PopularBook()
             };
 
             using (var conn = _db.GetConnection())
@@ -54,7 +54,7 @@ namespace Team11API.Models
                     {
                         while (await reader.ReadAsync())
                         {
-                            var book = new Book
+                            var book = new PopularBook
                             {
                                 bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
                                 isbn = reader.GetString(reader.GetOrdinal("ISBN")),
@@ -64,7 +64,7 @@ namespace Team11API.Models
                                 author = reader.GetString(reader.GetOrdinal("Author")),
                                 genre = reader.GetString(reader.GetOrdinal("Genre")),
                                 avgRating = reader.IsDBNull(reader.GetOrdinal("AvgRating"))
-                                    ? (double?)null
+                                    ? 0.0
                                     : Convert.ToDouble(reader["AvgRating"])
                             };
 
@@ -77,9 +77,38 @@ namespace Team11API.Models
             return fbd;
         }
 
+        public static DateTime RandomDate(DateTime start, DateTime end)
+        {
+            Random rand = new Random();
+            int range = (end - start).Days;
+            return start.AddDays(rand.Next(range));
+        }
+
         public async Task<PopularBooksDto> GetPopularBooks()
         {
-            string sql = "";
+            string sql = @"
+            SELECT TOP 9
+                b.BookID, 
+                b.ISBN, 
+                b.Title, 
+                b.Description,
+                b.Publisher,
+                b.PublicationDate, 
+                b.CoverImage, 
+                a.FirstName + ' ' + a.LastName AS Author, 
+                g.Name AS Genre, 
+                avg_ratings.AvgRating,
+                avg_ratings.TotalReviews
+            FROM Books b
+            JOIN Authors a ON b.AuthorID = a.AuthorID
+            JOIN Genres g ON b.GenreID = g.GenreID
+            LEFT JOIN (
+                SELECT BookID, AVG(Rating) AS AvgRating, COUNT(*) AS TotalReviews
+                FROM Reviews
+                GROUP BY BookID
+            ) avg_ratings ON b.BookID = avg_ratings.BookID
+            ORDER BY avg_ratings.AvgRating DESC, avg_ratings.TotalReviews DESC;
+            ";
             PopularBooksDto popularBooksDto = new PopularBooksDto { popularBooks = new List<PopularBook>() };
 
             using (var conn = _db.GetConnection())
@@ -92,7 +121,26 @@ namespace Team11API.Models
                     {
                         while (await reader.ReadAsync())
                         {
-                            // popularBooksDto.popularBooks =
+                            var book = new PopularBook
+                            {
+                                bookId = reader.GetInt32(reader.GetOrdinal("BookID")),
+                                isbn = reader.GetString(reader.GetOrdinal("ISBN")),
+                                title = reader.GetString(reader.GetOrdinal("Title")),
+                                description = reader.GetString(reader.GetOrdinal("Description")),
+                                coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                author = reader.GetString(reader.GetOrdinal("Author")),
+                                genre = reader.GetString(reader.GetOrdinal("Genre")),
+                                publisher = reader.GetString(reader.GetOrdinal("Publisher")),
+                                publicationDate = reader.GetDateTime(reader.GetOrdinal("PublicationDate")),
+                                avgRating = reader.IsDBNull(reader.GetOrdinal("AvgRating"))
+                                    ? 0.0
+                                    : Convert.ToDouble(reader["AvgRating"]),
+                                totalReviews = reader.IsDBNull(reader.GetOrdinal("TotalReviews"))
+                                    ? 0
+                                    : Convert.ToInt32(reader["TotalReviews"])
+                            };
+
+                            popularBooksDto.popularBooks.Add(book);
                         }
                     }
                 }
@@ -139,7 +187,7 @@ namespace Team11API.Models
 
         public async Task<GenreRowsDto> GetGenreRows()
         {
-            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 10 b.BookID AS bookId, b.ISBN AS isbn, b.Title AS title, b.CoverImage AS coverImage, b.Description AS description, b.PublicationDate AS publicationDate, a.FirstName + ' ' + a.LastName AS author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
+            string sql = "SELECT g.GenreID, g.Name, (SELECT TOP 15 b.BookID AS bookId, b.ISBN AS isbn, b.Title AS title, b.CoverImage AS coverImage, b.Description AS description, b.PublicationDate AS publicationDate, a.FirstName + ' ' + a.LastName AS author FROM Books b JOIN Authors a ON b.AuthorID = a.AuthorID WHERE b.GenreID = g.GenreID ORDER BY b.BookID FOR JSON PATH) AS genreBooks FROM Genres g;";
             GenreRowsDto genreRowsDto = new GenreRowsDto { genreRows = new List<GenreRow>() };
             using (var conn = _db.GetConnection())
             {
@@ -152,7 +200,6 @@ namespace Team11API.Models
                         while (await reader.ReadAsync())
                         {
                             var genreBooksJson = reader.GetString(2); 
-                            Console.WriteLine($"GENRE BOOKS JSON: {genreBooksJson}");
                             var books = JsonSerializer.Deserialize<List<Book>>(genreBooksJson);
                             
                             GenreRow gw = new GenreRow
@@ -162,8 +209,6 @@ namespace Team11API.Models
                                 genreBooks = books,
                                 offset = 10,
                             };
-
-                            Console.WriteLine($"GENRE ID: {gw.genreId}, Genre: {gw.genre}, books: {gw.genreBooks}");
 
                             genreRowsDto.genreRows.Add(gw);
                         }
@@ -229,7 +274,7 @@ namespace Team11API.Models
             FROM Books b
             JOIN Authors a ON b.AuthorID = a.AuthorID
             JOIN Genres g ON b.GenreID = g.GenreID
-            WHERE b.Title LIKE '%' + @SearchQuery + '%' OR a.FirstName + ' ' + a.LastName LIKE '%' + @SearchQuery + '%' OR g.Name LIKE '%' + @SearchQuery + '%'
+            WHERE b.Title LIKE '%' + @SearchQuery + '%' OR a.FirstName + ' ' + a.LastName LIKE '%' + @SearchQuery + '%' OR g.Name LIKE '%' + @SearchQuery + '%' OR b.Publisher LIKE '%' + @SearchQuery + '%' 
             ORDER BY b.BookID;
             ";
             SearchResultsDto srd = new SearchResultsDto

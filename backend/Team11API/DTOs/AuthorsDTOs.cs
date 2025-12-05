@@ -17,6 +17,7 @@ namespace Team11API.DTOs
     {
         public int authorId { get; set; } 
         public string name { get; set; } 
+        public double? avgRating { get; set; } 
         public string? coverImage { get; set; }
     }
 

@@ -31,6 +31,7 @@ export function AllBooks({ user_id, user_name }: AuthValues) {
             setIsLoading(false);
         }
 
+        window.scrollTo(0, 0);
         getBooksPerRequirement();
     }, [])
 
@@ -118,23 +119,14 @@ export function AllBooks({ user_id, user_name }: AuthValues) {
 
     return (
         <div className="min-h-screen bg-zinc-950">
-            <Navbar showSearchBar={true} getSearchResults={getSearchResults}/>
+            <Navbar showSearchBar={true} searchDescription="Search for books..." getSearchResults={getSearchResults}/>
             
             <div className="py-8 px-4 md:px-8">
                 <div className="max-w-7xl mx-auto">
-                    {/* Back Button */}
-                    <Link 
-                        to="/dashboard" 
-                        className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-50 mb-6 transition-colors"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Home
-                    </Link>
-
                     {/* Header Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-3 mb-3">
-                            {getIcon()}
+                            {/* {getIcon()} */}
                             <h1 className="text-4xl font-bold text-zinc-50">{getPageTitle()}</h1>
                         </div>
                         <p className="text-zinc-400 text-lg">{getPageDescription()}</p>
@@ -203,11 +195,11 @@ export function AllBooks({ user_id, user_name }: AuthValues) {
                     )}
 
                     {/* Books Grid */}
-                    {!isLoading && books.length > 0 && (
+                    {!isLoading && filteredBooks.length > 0 && (
                         <div>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-semibold text-zinc-50">
-                                    Showing {books.length} {books.length === 1 ? "book" : "books"}
+                                    Showing {filteredBooks.length} {filteredBooks.length === 1 ? "book" : "books"}
                                 </h2>
                                 
                                 {/* Optional: Add sort/filter buttons here */}
@@ -230,7 +222,7 @@ export function AllBooks({ user_id, user_name }: AuthValues) {
                     )}
 
                     {/* Empty State */}
-                    {!isLoading && books.length == 0 && (
+                    {!isLoading && filteredBooks.length == 0 && (
                         <div className="flex flex-col items-center justify-center py-20 px-4">
                             <div className="bg-zinc-900/50 border border-zinc-800 rounded-full p-6 mb-6">
                                 <BookOpen className="h-24 w-24 text-zinc-700" />

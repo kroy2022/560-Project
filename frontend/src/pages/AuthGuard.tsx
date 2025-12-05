@@ -12,12 +12,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const user_id = Number(localStorage.getItem("bookflix-user_id"));
   const user_name = localStorage.getItem("bookflix-name");
 
-  console.log("USER ID IN AUTH GUARD: ", user_id);
-  console.log("USER NAME IN AUTH GUARD: ", user_name);
-
   useEffect(() => {
     if (!user_id || !user_name) {
-      navigate("/signup");
+      navigate("/signin");
     }
   }, [navigate, user_id, user_name]);
 

@@ -23,9 +23,20 @@ namespace Team11API.Models
             string authorsQuery = @"SELECT 
                 a.AuthorID,
                 a.FirstName + ' ' + a.LastName AS AuthorName,
-                a.CoverImage
+                a.CoverImage,
+                AVG(r.Rating) AS AvgRating
             FROM Authors a
-            ORDER BY a.AuthorID;
+            JOIN Books b
+                ON a.AuthorID = b.AuthorID
+            LEFT JOIN Reviews r 
+                ON b.BookID = r.BookID
+            GROUP BY 
+                a.AuthorID,
+                a.FirstName,
+                a.LastName,
+                a.CoverImage
+            ORDER BY 
+                AvgRating DESC;
             ";
             string authorInformationQuery = @"
             SELECT 
@@ -58,9 +69,13 @@ namespace Team11API.Models
                                 name = reader.GetString(reader.GetOrdinal("AuthorName")),
                                 coverImage = reader.IsDBNull(reader.GetOrdinal("CoverImage"))
                                     ? null
-                                    : Convert.ToString(reader["CoverImage"])
+                                    : Convert.ToString(reader["CoverImage"]),
+                                avgRating = reader.IsDBNull(reader.GetOrdinal("AvgRating"))
+                                    ? null
+                                    : Convert.ToDouble(reader["AvgRating"])
                             };
 
+                            Console.WriteLine($"Author Avg Rating: {authorSummary.avgRating}");
                             aad.authors.Add(authorSummary);
                         }
                     }

@@ -12,6 +12,7 @@ export interface AuthorSummary {
   authorId: number
   name: string
   coverImage: string
+  avgRating?: number
 }
 
 export interface AuthValues {
@@ -25,9 +26,10 @@ export interface Book {
   title: string
   author: string
   coverImage: string
-  publicationDate: string
   description: string
   genre: string
+  publisher: string
+  publicationDate: string
   isSaved?: number
   avgRating?: number
 }

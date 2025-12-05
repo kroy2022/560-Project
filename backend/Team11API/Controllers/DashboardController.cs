@@ -34,7 +34,6 @@ public class DashboardController : ControllerBase
     {
         Console.WriteLine("IN TOP REVIEWED");
         PopularBooksDto result = await _dashboardModel.GetPopularBooks();
-        Console.WriteLine($"TOP REVIEWED BOOKS RESULT: {result}");
         return Ok(result);
     }
 
@@ -42,7 +41,6 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> GetGenreBooksRoute()
     {
         GenreRowsDto result = await _dashboardModel.GetGenreRows();
-        Console.WriteLine($"RESULT: {result}");
         return Ok(result);
     }
 
@@ -62,7 +60,6 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> GetSearchResultsRoute([FromQuery] string? query)
     {
         string searchQuery = query ?? "";
-        Console.WriteLine($"SEARCH QUERY: {searchQuery}");
 
         if (string.IsNullOrEmpty(searchQuery))
         {
@@ -83,9 +80,7 @@ public class DashboardController : ControllerBase
             return BadRequest(ModelState);
         }
         
-        Console.WriteLine($"IN SAVED BOOKS ROITE: {body.UserID}");
         RowBooksDto result = await _dashboardModel.GetSavedBooks(body);
-        Console.WriteLine($"GET SAVED BOOKS RESULT: {result}");
         return Ok(result);
     }
 

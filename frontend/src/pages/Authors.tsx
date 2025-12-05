@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AuthorSummary, AuthValues } from "../types"
 import { Navbar } from "../components/Navbar"
-import { UserRoundPen, BookOpen, ArrowRight } from "lucide-react"
+import { UserRoundPen, BookOpen, ArrowRight, Star } from "lucide-react"
 import { Card, CardContent } from "../components/ui/card"
 import axios from "axios";
 import { API_URL } from "../api/routes";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 export function Authors({ user_id, user_name }: AuthValues) {
     const navigate = useNavigate();
     const [authors, setAuthors] = useState<AuthorSummary[]>([]);
+    const [filteredAuthors, setFilteredAuthors] = useState<AuthorSummary[]>([]);
     const [totalBooks, setTotalBooks] = useState(0);
     const [totalGenres, setTotalGenres] = useState(0);
 
@@ -19,6 +20,7 @@ export function Authors({ user_id, user_name }: AuthValues) {
                 const response = await axios.get(`${API_URL}/authors/overview`);
                 console.log("ALL AUTHORS INFO RESPONSE: ", response);
                 setAuthors(response.data.authors);
+                setFilteredAuthors(response.data.authors);
                 setTotalBooks(response.data.totalBooks);
                 setTotalGenres(response.data.totalGenres);
             } catch (error) {
@@ -29,11 +31,19 @@ export function Authors({ user_id, user_name }: AuthValues) {
         getAuthorsInformation();
     }, [])
 
-    
-    
+    const getSearchResults = async (query: string) => {
+        if (query == "") {
+            setFilteredAuthors(authors);
+            return;
+        }
+
+        const searchedAuthors = authors.filter((author) => author.name.toLowerCase().includes(query.toLowerCase()));
+        setFilteredAuthors(searchedAuthors);
+    }
+
     return (
         <div className="min-h-screen bg-zinc-950">
-            <Navbar showSearchBar={false} />
+            <Navbar showSearchBar={true} searchDescription="Search for an author..." getSearchResults={getSearchResults}/>
             
             <div className="py-8 px-4 md:px-8">
                 <div className="max-w-7xl mx-auto">
@@ -55,7 +65,7 @@ export function Authors({ user_id, user_name }: AuthValues) {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm text-zinc-500 mb-1">Total Authors</p>
-                                        <p className="text-3xl font-bold text-zinc-50">{authors.length}</p>
+                                        <p className="text-3xl font-bold text-zinc-50">{filteredAuthors.length}</p>
                                     </div>
                                     <UserRoundPen className="h-12 w-12 text-red-600/30" />
                                 </div>
@@ -89,7 +99,7 @@ export function Authors({ user_id, user_name }: AuthValues) {
 
                     {/* Authors Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {authors.map((author) => (
+                        {filteredAuthors.map((author) => (
                             <Card 
                                 onClick={() => navigate(`/author/${author.authorId}`)}
                                 key={author.authorId}
@@ -120,10 +130,16 @@ export function Authors({ user_id, user_name }: AuthValues) {
                                         </div>
                                     </div>
                                     
-                                    <div className="p-4">
-                                        <h3 className="font-semibold text-zinc-50 text-center line-clamp-2 group-hover:text-red-500 transition-colors duration-200">
+                                    <div className="p-4 flex flex-col gap-2">
+                                        <h3 className="font-semibold text-zinc-50 text-center line-clamp-2 group-hover:text-red-500 transition-colors duration-200 min-h-[2.5rem]">
                                             {author.name}
                                         </h3>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                            <span className="text-sm font-medium text-zinc-300">
+                                                {author.avgRating ? author.avgRating.toFixed(1) : "N/A"}
+                                            </span>
+                                        </div> 
                                     </div>
                                 </CardContent>
                             </Card>
@@ -131,11 +147,10 @@ export function Authors({ user_id, user_name }: AuthValues) {
                     </div>
 
                     {/* Empty State (when no authors) */}
-                    {authors.length === 0 && (
+                    {filteredAuthors.length == 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
                             <UserRoundPen className="h-24 w-24 text-zinc-700 mb-4" />
                             <h2 className="text-2xl font-bold text-zinc-50 mb-2">No Authors Found</h2>
-                            <p className="text-zinc-400">Check back later for featured authors</p>
                         </div>
                     )}
                 </div>

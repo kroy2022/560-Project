@@ -6,6 +6,8 @@ import axios from "axios"
 import { API_URL } from "../api/routes"
 import type { PopularBook, BookSummary, Book, Review, GenreRow, ApiResponse, AuthValues } from "../types"
 import { Navbar } from "../components/Navbar"
+import { BookCard } from "../components/BookCard"
+import { BookOpen } from "lucide-react"
 
 export function Dashboard({ user_id, user_name }: AuthValues) {
   console.log("USER ID AND NAME: ", user_id, name);
@@ -20,7 +22,7 @@ export function Dashboard({ user_id, user_name }: AuthValues) {
     const getDashboardData = async () => {
       await Promise.all([
         getFeaturedBook(),
-       // getTopReviewedBooks(),
+        getTopReviewedBooks(),
         getSavedBooks(),
         getGenreRows()
       ]);
@@ -42,6 +44,7 @@ export function Dashboard({ user_id, user_name }: AuthValues) {
   const getTopReviewedBooks = async () => {
     try {
       const response = await axios.get(`${API_URL}/dashboard/top-reviewed`);
+      console.log(response.data.topReviewedBooks);
       setTopReviewedBooks(response.data.popularBooks);
     } catch (error) {
       console.error("ERROR IN getTopReviewedBooks ", error);
@@ -117,7 +120,7 @@ export function Dashboard({ user_id, user_name }: AuthValues) {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      <Navbar showSearchBar={true} getSearchResults={getSearchResults}/>
+      <Navbar showSearchBar={true} searchDescription="Search for books, authors, genres, or publishers..." getSearchResults={getSearchResults}/>
       
       {searchQuery == "" ? (
         <>
@@ -131,8 +134,37 @@ export function Dashboard({ user_id, user_name }: AuthValues) {
           </div>
         </>
       ) : (
-        <div className="space-y-8 py-8">
-          <BookRow title="Search Results" books={searchResults} />
+        <div className="py-8 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Search Results Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-zinc-50 mb-2">
+                Search Results
+              </h2>
+              <p className="text-zinc-400">
+                Found {searchResults.length} {searchResults.length === 1 ? 'book' : 'books'} matching "{searchQuery}"
+              </p>
+            </div>
+
+            {/* Results Grid */}
+            {searchResults.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                {searchResults.map((book) => (
+                  <BookCard key={book.bookId} book={book} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-full p-6 mb-6">
+                  <BookOpen className="h-16 w-16 text-zinc-700" />
+                </div>
+                <h3 className="text-xl font-bold text-zinc-50 mb-2">No Books Found</h3>
+                <p className="text-zinc-400 text-center max-w-md">
+                  We couldn't find any books matching "{searchQuery}". Try different keywords or browse our collections below.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { Star } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import type { BookSummary, PopularBook } from "../types"
 import {
   Tooltip,
@@ -21,15 +21,19 @@ function isPopularBook(book: BookSummary | PopularBook): book is PopularBook {
 }
 
 export function BookCard({ book }: BookCardProps) {
+  const navigate = useNavigate();
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Link to={`/book/${book.bookId}`}>
-            <div className="group relative flex-shrink-0 w-[180px] cursor-pointer transition-transform duration-300 hover:scale-105">
+            <div onClick={() => navigate(`/book?book_id=${book.bookId}`)} className="group relative flex-shrink-0 w-[180px] cursor-pointer transition-transform duration-300 hover:scale-105">
               <div className="relative aspect-[2/3] overflow-hidden rounded-md shadow-lg">
                 <img
-                  src={book.coverImage || "/placeholder.svg"}
+                  src={
+                    book.coverImage
+                      ? (book.coverImage === "bad" ? "/default.png" : book.coverImage)
+                      : "/default.png"
+                  }
                   alt={book.title}
                   className="h-full w-full object-cover transition-opacity duration-300 group-hover:opacity-75"
                 />
@@ -47,7 +51,6 @@ export function BookCard({ book }: BookCardProps) {
                 )}
               </div>
             </div>
-          </Link>
         </TooltipTrigger>
         <TooltipContent 
           side="top" 

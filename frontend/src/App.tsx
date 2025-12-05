@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Navbar } from "./components/Navbar"
+import { Landing } from "./pages/Landing"
 import { SignIn } from "./pages/SignIn"
 import { SignUp } from "./pages/SignUp"
 import { Dashboard } from "./pages/Dashboard"
@@ -13,19 +14,15 @@ function App() {
   return (
     <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/" element={
-              <AuthGuard>
-                <Dashboard />
-              </AuthGuard>
-            } />
           <Route path="/dashboard" element={
               <AuthGuard>
                 <Dashboard />
               </AuthGuard>
-            } />b
-          <Route path="/book/:bookId" element={
+            } />
+          <Route path="/book" element={
               <AuthGuard>
                 <BookDetails />
               </AuthGuard>

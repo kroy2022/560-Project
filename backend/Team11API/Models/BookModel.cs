@@ -26,6 +26,7 @@ namespace Team11API.Models
                     b.Title,
                     b.Description,
                     b.PublicationDate,
+                    b.Publisher,
                     b.CoverImage,
                     a.FirstName + ' ' + a.LastName AS Author,
                     g.Name AS Genre,
@@ -65,6 +66,8 @@ namespace Team11API.Models
                                 title = reader.GetString(reader.GetOrdinal("Title")),
                                 description = reader.GetString(reader.GetOrdinal("Description")),
                                 coverImage = reader.GetString(reader.GetOrdinal("CoverImage")),
+                                publicationDate = reader.GetDateTime(reader.GetOrdinal("PublicationDate")),
+                                publisher = reader.GetString(reader.GetOrdinal("Publisher")),
                                 author = reader.GetString(reader.GetOrdinal("Author")),
                                 genre = reader.GetString(reader.GetOrdinal("Genre")),
                                 isSaved = reader.GetInt32(reader.GetOrdinal("isSaved"))
@@ -159,18 +162,18 @@ namespace Team11API.Models
                 SELECT * FROM AuthorBooks
                 UNION ALL
                 SELECT * FROM GenreBooks
-            ),
-            Deduped AS (
-                SELECT
-                    *,
-                    ROW_NUMBER() OVER (PARTITION BY BookID ORDER BY Priority) AS rn
-                FROM Combined
             )
 
-            SELECT TOP 10 BookID, Title, CoverImage, Author, Priority
-            FROM Deduped
-            WHERE rn = 1 AND BookID <> @BookID
-            ORDER BY Priority, BookID;
+            SELECT TOP 10
+                c.BookID,
+                MIN(c.Title) AS Title,
+                MIN(c.CoverImage) AS CoverImage,
+                MIN(c.Author) AS Author,
+                MIN(c.Priority) AS Priority
+            FROM Combined c
+            WHERE c.BookID <> @BookID
+            GROUP BY c.BookID
+            ORDER BY MIN(c.Priority), c.BookID;
             ";
 
             BooksDto sbt = new BooksDto

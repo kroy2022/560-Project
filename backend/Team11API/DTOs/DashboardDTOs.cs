@@ -12,9 +12,8 @@ namespace Team11API.DTOs
     // Helper classes
     public class PopularBook : Book
     {
-        public int avgRating { get; set; }
-        public int totalReviews { get; set; }
-        public int popularityRank { get; set; }
+        public double avgRating { get; set; }
+        public int? totalReviews { get; set; }
     }
     public class Book
     {
@@ -24,6 +23,7 @@ namespace Team11API.DTOs
             isbn = "";
             title = "";
             description = "";
+            publisher = "";
             author = "";
             coverImage = "";
             genre = "";
@@ -34,13 +34,13 @@ namespace Team11API.DTOs
         public string isbn { get; set; }
         public string title { get; set; }
         public string description { get; set; }
+        public string publisher { get; set; }
         public string author { get; set; }
         public string coverImage { get; set; }
         public string genre { get; set; }
 
         public DateTime publicationDate { get; set; }
         public int? isSaved { get; set; }
-        public double? avgRating { get; set; }
     }
 
     public class GenreRow
@@ -55,7 +55,7 @@ namespace Team11API.DTOs
     // Return DTO's (from backend to UI)
     public class FeaturedBookDto
     {
-        public Book featuredBook { get; set; }
+        public PopularBook featuredBook { get; set; }
     }
 
     public class PopularBooksDto
